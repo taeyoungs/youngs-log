@@ -2,6 +2,7 @@
   "index": "Introduction",
   "react": "React",
   "cicd": "CI/CD",
+  "others": "Others",
   "about": {
     "title": "About",
     "type": "page"
