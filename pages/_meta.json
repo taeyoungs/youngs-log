@@ -1,6 +1,8 @@
 {
   "index": "Introduction",
   "react": "React",
+  "browser": "Browser",
+  "state-management": "전역 상태 관리",
   "cicd": "CI/CD",
   "others": "Others",
   "about": {
