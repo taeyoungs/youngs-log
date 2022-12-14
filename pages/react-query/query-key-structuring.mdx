@@ -1,0 +1,150 @@
+# React Query의 Query Key 구조화하기
+
+나는 어느 시점부터 라이브러리를 사용할 때 해당 라이브러리의 Maintainer가 작성한 블로그 포스팅은 없는지 살펴본다. 아무래도 Maintainer인 만큼 라이브러리에 대한 이해도가 높기에 그런 사람들이 작성한 포스팅을 볼 때 라이브러리의 Main Concept을 이해하는 데 큰 도움이 되기 때문이다.
+
+React Query를 사용하고 있을 때도 동일했다. Maintainer인 Tkdodo의 React Query 시리즈를 읽고 있을 때였는데 이때까지만 해도 Query Key가 중요하다는 것은 알지만 이를 어떻게 체계적으로 구성해 나가야 하는지 감을 잡지 못할 때였다. 그런데 마침 React Query 시리즈 중 **Query Key 구조화**에 대한 포스팅을 읽게 됐고 이를 바탕으로 프로젝트에서 사용하던 Query Key를 구조화했다.
+
+따라서, 이 포스팅에서 내가 Query Key를 구조화한 과정에 대해서 다루고자 한다.
+
+## 들어가기에 앞서
+
+이 방식이 정답은 아니다. 그저 Query Key를 다루는 방식 중의 하나일 뿐이다. 중요한 건 Query Key를 다룸에 있어서 고민하고 있던 부분이 있었고 이를 Query Key를 구조화하는 방식을 통해서 해결했다는 것이다.
+
+## React Query의 Query Key
+
+[Tkdodo 포스팅](https://tkdodo.eu/blog/effective-react-query-keys)에서도 알 수 있듯이 Query Key는 React Query에서 정말 중요한 개념이다.
+
+Query Key는 다음과 같은 이유들로 인해 필요하다.
+
+- React Query가 내부적으로 데이터를 올바르게 캐시하기 위해
+- Query에 대한 `dependency`가 변경될 때 자동으로 `refetch` 하도록 만들기 위해
+- 필요할 때 Query Cache와 직접 상호 작용하기 위해
+- …
+
+> 여기서 Query Cache와의 상호 작용이란 Mutation 이후에 Mutation의 응답 데이터를 활용하여 캐시 데이터를 업데이트하거나 특정 Query를 직접 `invalidate` 하는 경우들을 말한다.
+
+이 외에도 여러 가지 역할들을 수행하는 Query Key이기에 이런 역할들을 효과적으로 수행하기 위해선 Query Key를 특정 규칙을 기준으로 구조화할 필요가 있다.
+
+## Query Key를 구조화할 수 있는 이유
+
+Query Key를 배열이나 객체로 구조화하고도 React Query는 매끄럽게 일치하는 Query Key를 찾아낸다. 이게 가능한 이유는 Query Cache와 Fuzzy Matching 때문이다.
+
+### Query Cache
+
+내부적으로 Query Cache는 직렬화된 Query Key인 Key와 메타데이터를 더한 Query Data인 value로 이루어진 JavaScript 객체이다. Key들은 deterministic한 방법으로 해시 처리되기에 Key에 객체를 사용해도 된다.
+
+여기서 **deterministic way**라는 건 객체가 들어왔을 때 객체 내부 속성들의 순서에 상관없이 속성들이 동일하다면 같은 Query Key로 보는 방법을 말한다.
+
+### Fuzzy Matching
+
+React Query는 일치하는 Query Key를 찾을 때 `fuzzy`하게 찾는다. 여기서 `fuzzy`는 직역하면 유사나 흐릿으로 나오는데 예시로 이해하는 것이 빠르다.
+
+예를 들어, `['A', 'B', 'C']`와 같은 Query Key가 있다고 할 때 `queryClient.invalidateQuerires` 메서드에 Query Key 인수를 `['A']`만 전달하여도 React Query가 찾아내는 Query Key 목록 안에 `['A', 'B', 'C']`가 포함된다.
+
+이를 수행하는 함수 `partialDeepEqual`은 다음과 같다. **fuzzy matching**은 배열과 객체에 대해 동일하게 동작한다.
+
+```typescript
+// fuzzy matching을 담당하는 partialDeepEqual 함수의 동작이 궁금하다면 위 링크를 확인하자.
+// https://github.com/TanStack/query/blob/9e414e8b4f3118b571cf83121881804c0b58a814/src/core/utils.ts#L321-L338
+
+export function partialDeepEqual(a: any, b: any): boolean {
+  if (a === b) {
+    return true;
+  }
+
+  if (typeof a !== typeof b) {
+    return false;
+  }
+
+  if (a && b && typeof a === 'object' && typeof b === 'object') {
+    return !Object.keys(b).some((key) => !partialDeepEqual(a[key], b[key]));
+  }
+}
+```
+
+이제 본격적으로 예시를 통한 Query Key 구조화 과정을 살펴보자.
+
+## 예시
+
+### API
+
+| API명              | Portion of URL             | 로그인 유무 |
+| ------------------ | -------------------------- | ----------- |
+| 회원가입 여부 체크 | `/user/check-joinable?id=` | X           |
+| 이메일 중복 확인   | `/user/check-email?email=` | O           |
+| 사용자 정보 조회   | `/user/:id`                | O           |
+
+위와 같은 간단한 API 명세가 있다고 해보자. 여기서 Query Key에 사용할 요소들을 추려내야 한다. 이때, Query Key들 사이에 필요하다고 생각되는 점까지 세세하게 아주 일반적인 것부터 아주 구체적인 것까지 구조화해야 한다.
+
+여기서는 `user`라는 키워드를 대분류(`scope`)로 잡겠다.
+
+### Scope, Entity 그리고 Unique ID
+
+| API명              | Scope  | Entity          | Unique ID |
+| ------------------ | ------ | --------------- | --------- |
+| 회원가입 여부 체크 | `user` | `checkJoinable` |           |
+| 이메일 중복 확인   | `user` | `checkEmail`    |           |
+| 사용자 정보 조회   | `user` |                 | `:id`     |
+
+> 다시 한번 말하지만 이 방법이 정답은 아니다. `scope`, `entity` 등 이런 요소들은 자신의 상황에 맞춰 효율적으로 추출 및 정의해내면 된다.
+
+API 명세를 기반으로 Query Key에 사용할 요소들을 추출하였으므로 이를 조합하여 API별로 고유한 Query Key 객체를 만들어 낸다.
+
+### Query Key Structure
+
+| API명              | Query Key                                      |
+| ------------------ | ---------------------------------------------- |
+| 회원가입 여부 체크 | `[{ scope: 'user', entity: 'checkJoinable' }]` |
+| 이메일 중복 확인   | `[{ scope: 'user', entity: 'checkEmail' }]`    |
+| 사용자 정보 조회   | `[{ scope: 'user', id: (Number) }]`            |
+
+이제 API별로 고유하면서 구조화된 Query Key를 얻게 되었다. 이런 구조화된 Query Key를 갖게 되면 다음과 같은 작업을 해볼 수 있다.
+
+- `queryClinet.invalidateQueries([{ scope: 'user' }])`를 실행하여 사용자와 관련된 API를 전부 `invalidate` 할 수도 있다. 이를 실행하고 다른 페이지로 이동했을 때 해당 페이지에 `{ scope: 'user' }`를 가진 Query Key가 있다면 해당 Query Key에 매핑된 **React Query Observer**가 활성화되는 순간 `invalidate` 한다.
+- `queryClient.removeQueries([{ id: 1 }])`을 실행하여 `id`가 1인 특정 사용자와 관련된 캐시 데이터를 전부 삭제하는 작업도 가능하다.
+- 앞서 언급했듯이 Query Cache와의 상호 작용할 때도 특정 Query Key를 가진 캐시 데이터를 찾고 싶은 경우 유용하게 사용되기도 한다.
+
+여기선 객체로 Query Key를 구조화했는데 이는 배열로 동일한 작업이 불가능하다는 것이 아니라 객체를 사용한 방법이 더 직관적이고 사용성 측면에서 더 유용하다고 생각하기 때문이다.
+
+### Query Key Factory
+
+문제는 구조화된 Query Key를 매번 일일이 작성하는 것이 보통 일이 아니라는 것이다. 구조화되면서 조금 복잡해진 만큼 작성하면서 실수를 범할 가능성도 커졌다.
+
+따라서, 이러한 구조화된 Query Key를 조금 더 쉽고 관리하기 편하도록 Maintainer가 추천하는 방법이 있는데 이는 바로 **Query Key Factory**다.
+
+**Query Key Factory**의 생김새는 다음과 같다.
+
+```typescript
+const userKeys = {
+  base: [{ scope: 'user' }] as const,
+  joinable: () => [{ ...userKeys.base[0], entity: 'checkJoinable' }] as const,
+  email: () => [{ ...userKeys.base[0], entity: 'checkEmail' }] as const,
+  profile: (id: number) => [{ ...userKeys.base[0], id }] as const,
+};
+```
+
+위 Factory 객체를 이용하면 다음과 같이 코드를 작성할 수 있다.
+
+```typescript
+import { useQuery } from '@tanstack/react-query';
+
+import { userKeys } from './factory';
+
+const useCheckJoinable = () => {
+  return useQuery(userKeys.joinable(), checkJoinable, {
+    // ...
+  });
+};
+
+export default useCheckJoinable;
+```
+
+개인적으로 Factory 객체를 만들어서 사용할 때 좋았던 점은 다음과 같다.
+
+- Query Key 구조에 변경 사항이 생겨도 대처가 쉽다.
+- 일정한 규칙을 따르고 있기 때문에 확장이 편하다.
+- `queryFn` 매개변수에 들어오는 `QueryFunctionContext`의 Query Key 타입을 명시하기 편해진다.
+
+## 끝으로
+
+이렇게 Query Key를 구조화하는 것이 마냥 좋은 점만 있는 것은 아니다. 특히나 규모가 작은 애플리케이션이라면 이러한 작업은 큰 의미가 없을지도 모른다. 언제나 선택의 문제다. 하지만 React Query를 사용하면서 Query Key를 조금 더 체계적으로 구성하고 싶다면 이 방법을 추천한다.

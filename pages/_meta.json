@@ -1,6 +1,7 @@
 {
   "index": "Introduction",
   "react": "React",
+  "react-query": "React Query",
   "browser": "Browser",
   "state-management": "전역 상태 관리",
   "cicd": "CI/CD",
