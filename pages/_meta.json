@@ -2,11 +2,13 @@
   "index": "Introduction",
   "react": "React",
   "react-query": "React Query",
+  "react-router": "React Router",
   "browser": "Browser",
   "state-management": "전역 상태 관리",
   "cicd": "CI/CD",
   "architecture": "Architecture",
   "others": "Others",
+
   "about": {
     "title": "About",
     "type": "page"
