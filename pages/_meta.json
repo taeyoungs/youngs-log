@@ -1,7 +1,7 @@
 {
   "index": "Introduction",
-  "react-query": "React Query",
   "memoir": "회고록",
+  "react-query": "React Query",
   "others": "Others",
   "about": {
     "title": "About",
