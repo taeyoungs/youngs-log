@@ -39,7 +39,7 @@ import { Callout } from 'nextra-theme-docs';
 
 ### Ensures continuous code review
 
-TBD의 빠르고 작은 커밋들은 코드 리뷰를 보다 효율적인 프로세스로 만든다. 작은 **branch**들을 통해 개발자들은 작은 변경 사항들을 빠르게 확인하고 리뷰할 수 있다. 이는 리뷰어가 코드의 페이지를 읽거나 코드 변경이 일어난 넓은 범위를 일일히 검사해야 하는 수명이 긴 **Feature branch**에 비해 훨씬 쉽다.
+**TBD**의 빠르고 작은 커밋들은 코드 리뷰를 보다 효율적인 프로세스로 만든다. 작은 **branch**들을 통해 개발자들은 작은 변경 사항들을 빠르게 확인하고 리뷰할 수 있다. 이는 리뷰어가 코드의 페이지를 읽거나 코드 변경이 일어난 넓은 범위를 일일히 검사해야 하는 수명이 긴 **Feature branch**에 비해 훨씬 쉽다.
 
 ### Enables consecutive production code releases
 
@@ -77,11 +77,11 @@ TBD의 빠르고 작은 커밋들은 코드 리뷰를 보다 효율적인 프로
 
 ### Have three or fewer active branches in the application’s code repository
 
-**Branch**가 머지되면 삭제하는 것이 가장 좋다. 활성화된 **branch**가 많이 있는 레포의 경우 **side effect**가 존재한다. 팀에서 활성화된 **branch**를 검사하여 진행 중인 작업을 확인하는 것이 도움이 될 순 있지만 여전히 **stale**하고 비활성화된 **brnach**가 있는 경우 이러한 도움도 얻지 못할 수 있다. Some developers use Git user interfaces that may become unwieldy to work with when loading a large number of remote branches.
+**Branch**가 머지되면 삭제하는 것이 가장 좋다. 활성화된 **branch**가 많이 있는 레포의 경우 **side effect**가 존재한다. 팀에서 활성화된 **branch**를 검사하여 진행 중인 작업을 확인하는 것이 도움이 될 순 있지만 여전히 **stale**하고 비활성화된 **brnach**가 있는 경우 이러한 도움도 얻지 못할 수 있다. 일부 개발자는 많은 수의 원격 브랜치를 로드할 때 다루기 어려울 수 있는 Git 사용자 인터페이스를 사용한다.
 
 ### Merge branches to the trunk at least once a day
 
-높은 퍼포먼스를 발휘하는 **TBD** 팀은 적어도 매일 열려 있고 머지할 준비가 된 **branch**를 마무리하고 머지하해야 한다. 이러한 작업은 릴리즈 추적을 위한 리듬을 유지하고 주기를 설정하는 데 도움을 준다. The team can then tag the main trunk at the end of day as a release commit, which has the helpful side effect of generating a daily agile release increment.
+높은 퍼포먼스를 발휘하는 **TBD** 팀은 적어도 매일 열려 있고 머지할 준비가 된 **branch**를 마무리하고 머지하해야 한다. 이러한 작업은 릴리즈 추적을 위한 리듬을 유지하고 주기를 설정하는 데 도움을 준다. 그런 다음 팀은 하루가 끝날 때 메인 트렁크에 릴리즈 커밋으로 태그를 지정할 수 있으며, 이는 매일 애자일 릴리즈 상승을 만드는 유용한 부수적인 효과를 가져온다.
 
 ### Reduced number of code freezes and integration phases
 
