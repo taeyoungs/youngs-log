@@ -1,0 +1,36 @@
+# Optional 속성임에도 undefined을 Union으로 잡아놓은 이유
+
+## 개요
+
+최근에 디코에서 지인분께서 동료분들과 이야기하면서 나온 의문에 대해서 혹시 아시는 바가 있냐고 여쭤보신 적이 있었다. DefinitelyTyped에서 정의해서 배포 중인 React 타입 중 `ButtonHTMLAttributes`와 같은 inferface에 optional 속성임에도 `undefined`가 Union 타입으로 잡혀있는 부분에 대한 의문이었다.
+
+내가 아는 선에서는 불필요한 작업이긴 한데 분명 이렇게 작성된 이유는 있을 것 같아서 찾아보다가 결국 DefinitelyTyped Repo를 받아서 깃 히스토리를 하나씩 들춰보기 시작했다.
+
+## Add undefined to optional properties PR
+
+`ButtonHTMLAttributes` 타입이 최근에 작성됐을리는 없다고 생각하여 DefinitelyTyped/react 중에서 v15 폴더를 기준으로 살펴보기 시작했다. 운 좋게도 바로 관련된 커밋 메시지를 확인할 수 있었는데 해당 메시지는 다음과 같다.
+
+![commit message](/react/optional-property-with-undefined/1.png)
+
+날짜와 커밋 메시지를 가지고 DefinitelyTyped Repo에서 [PR](https://github.com/DefinitelyTyped/DefinitelyTyped/pull/54241)을 찾아냈는데 PR 자체의 작업 내용은 생각보다 간단했다.
+
+> In preparation for exactOptionalPropertyTypes in Typescript 4.4, add undefined to all optional properties. #no-publishing-comment
+
+내용을 정리하면 TypeScript 4.4에서 추가되는 `exactOptionalPropertyTypes` 옵션 활성화를 대비하여 모든 optional 속성들에게 추가로 `undefined`를 Union 타입으로 잡아준다는 것이다.
+
+## `exactOptionalPropertyTypes`은 무엇일까?
+
+> With exactOptionalPropertyTypes enabled, TypeScript applies stricter rules around how it handles properties on `type` or `interfaces` which have a `?` prefix.
+>
+> For example, this interface declares that there is a property which can be one of two strings: ‘dark’ or ‘light’ or it should not be in the object.
+>
+> https://www.typescriptlang.org/tsconfig#exactOptionalPropertyTypes
+
+`exactOptionalPropertyTypes`은 TypeScript 4.4에서 처음 추가된 옵션으로 `exactOptionalPropertyTypes`을 활성화한 순간부터 optional 속성에 대해 더 엄격한 타입을 적용하기 시작하는데 그 중 하나로 `undefined` 속성을 명시적으로 전달할 수 없게 된다.
+
+아마 내부적으로 `undefined`를 명시적으로 전달해주는 부분이 있어서 옵션을 활성화하기 전 그런 부분에 대해서 미리 대비를 해주는 것으로 보인다.
+
+## 레퍼런스
+
+- https://github.com/DefinitelyTyped/DefinitelyTyped/pull/54241
+- https://www.typescriptlang.org/tsconfig#exactOptionalPropertyTypes
