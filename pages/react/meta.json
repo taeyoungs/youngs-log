@@ -1,3 +1,0 @@
-{
-  "optional-property-with-undefined": "Optional 속성임에도 undefined을 Union으로 잡아놓은 이유"
-}
